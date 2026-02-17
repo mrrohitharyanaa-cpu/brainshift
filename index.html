@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BrainShift Pro</title>
+
+<style>
+body{
+margin:0;
+font-family:Arial, sans-serif;
+background:#0f2027;
+color:white;
+overflow:hidden;
+}
+
+header{
+background:#141e30;
+padding:15px;
+text-align:center;
+font-size:22px;
+font-weight:bold;
+}
+
+.screen{
+display:none;
+padding:15px;
+height:calc(100vh - 120px);
+overflow:auto;
+}
+
+.active{
+display:block;
+}
+
+.card{
+background:#1f2f40;
+padding:15px;
+border-radius:15px;
+margin-bottom:15px;
+box-shadow:0 5px 15px rgba(0,0,0,0.4);
+}
+
+button{
+padding:10px 20px;
+border:none;
+border-radius:20px;
+background:#00ffcc;
+color:black;
+font-weight:bold;
+}
+
+nav{
+position:fixed;
+bottom:0;
+width:100%;
+display:flex;
+background:#141e30;
+}
+
+nav button{
+flex:1;
+padding:15px;
+background:none;
+color:white;
+border:none;
+font-size:16px;
+}
+
+canvas{
+background:#111;
+border-radius:15px;
+margin-top:10px;
+}
+
+</style>
+</head>
+<body>
+
+<header>BrainShift Pro</header>
+
+<div id="home" class="screen active">
+<div class="card">
+<h3>Welcome Player 👋</h3>
+<p>Play game and increase your brain speed.</p>
+<button onclick="showScreen('game')">Play Game</button>
+</div>
+
+<div class="card">
+<h3>Statistics</h3>
+<p>Total High Score: <span id="highScore">0</span></p>
+</div>
+</div>
+
+<div id="game" class="screen">
+<h3>Game Zone 🎮</h3>
+<canvas id="gameCanvas"></canvas>
+<p>Score: <span id="score">0</span></p>
+<button onclick="goHome()">Exit Game</button>
+</div>
+
+<div id="profile" class="screen">
+<div class="card">
+<h3>Profile</h3>
+<p>Name: Player</p>
+<p>Status: Pro Gamer</p>
+</div>
+</div>
+
+<nav>
+<button onclick="showScreen('home')">Home</button>
+<button onclick="showScreen('game')">Game</button>
+<button onclick="showScreen('profile')">Profile</button>
+</nav>
+
+<script>
+function showScreen(id){
+document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+}
+
+function goHome(){
+showScreen('home');
+}
+
+const canvas=document.getElementById("gameCanvas");
+const ctx=canvas.getContext("2d");
+
+canvas.width=window.innerWidth-30;
+canvas.height=400;
+
+let player={x:canvas.width/2-20,y:350,size:40};
+let obstacle={x:Math.random()*300,y:-40,size:40,speed:4};
+let score=0;
+let highScore=localStorage.getItem("highScore")||0;
+document.getElementById("highScore").innerText=highScore;
+
+function draw(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+ctx.fillStyle="#00ffcc";
+ctx.fillRect(player.x,player.y,player.size,player.size);
+
+ctx.fillStyle="#ff4d4d";
+ctx.fillRect(obstacle.x,obstacle.y,obstacle.size,obstacle.size);
+
+obstacle.y+=obstacle.speed;
+
+if(obstacle.y>400){
+obstacle.y=-40;
+obstacle.x=Math.random()*300;
+score++;
+document.getElementById("score").innerText=score;
+}
+
+if(player.x<obstacle.x+40 &&
+player.x+40>obstacle.x &&
+player.y<obstacle.y+40 &&
+player.y+40>obstacle.y){
+alert("Game Over");
+if(score>highScore){
+highScore=score;
+localStorage.setItem("highScore",highScore);
+document.getElementById("highScore").innerText=highScore;
+}
+score=0;
+document.getElementById("score").innerText=0;
+obstacle.y=-40;
+}
+
+requestAnimationFrame(draw);
+}
+
+canvas.addEventListener("touchmove",function(e){
+let touchX=e.touches[0].clientX;
+player.x=touchX-player.size/2;
+});
+
+draw();
+</script>
+
+</body>
+  </html>
+  
