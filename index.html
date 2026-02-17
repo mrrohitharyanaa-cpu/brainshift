@@ -3,25 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Math Empire 2026</title>
+<title>Math Empire</title>
 
 <style>
 body{
 margin:0;
-font-family:Arial, sans-serif;
-background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+font-family:Arial;
+background:linear-gradient(135deg,#141e30,#243b55);
 color:white;
-text-align:center;
 }
 
 header{
 padding:15px;
-font-size:22px;
+text-align:center;
+font-size:20px;
+background:#0f2027;
 font-weight:bold;
-background:#111;
 }
 
-.screen{display:none;padding:20px;}
+.screen{
+display:none;
+padding:20px;
+padding-bottom:80px;
+}
+
 .active{display:block;}
 
 .card{
@@ -30,17 +35,19 @@ padding:20px;
 border-radius:15px;
 margin:15px auto;
 max-width:420px;
-box-shadow:0 10px 20px rgba(0,0,0,0.5);
+box-shadow:0 8px 20px rgba(0,0,0,0.5);
+text-align:center;
 }
 
 button{
-padding:12px 25px;
+padding:10px 20px;
 border:none;
-border-radius:25px;
+border-radius:20px;
 margin:5px;
-font-weight:bold;
 background:#00ffcc;
 color:black;
+font-weight:bold;
+cursor:pointer;
 }
 
 input{
@@ -48,137 +55,218 @@ padding:10px;
 border-radius:10px;
 border:none;
 width:80%;
-font-size:18px;
-text-align:center;
+font-size:16px;
+margin:5px;
 }
 
-#timer{font-size:18px;margin-top:10px;}
-.stats{margin-top:10px;font-size:14px;}
+nav{
+position:fixed;
+bottom:0;
+width:100%;
+display:flex;
+background:#111;
+}
+
+nav button{
+flex:1;
+background:none;
+color:white;
+border:none;
+padding:15px;
+font-size:13px;
+}
 </style>
 </head>
 <body>
 
-<header>Math Empire 2026</header>
+<header>Math Empire</header>
 
-<div id="home" class="screen active">
+<!-- LOGIN -->
+<div id="login" class="screen active">
 <div class="card">
-<h2>Welcome Challenger</h2>
+<h3>Login</h3>
+<input type="text" id="loginUser" placeholder="Username">
+<input type="password" id="loginPass" placeholder="Password">
+<br>
+<button onclick="login()">Login</button>
+<p>Don't have account?</p>
+<button onclick="showScreen('register')">Register</button>
+</div>
+</div>
+
+<!-- REGISTER -->
+<div id="register" class="screen">
+<div class="card">
+<h3>Register</h3>
+<input type="text" id="regUser" placeholder="Username">
+<input type="password" id="regPass" placeholder="Password">
+<br>
+<button onclick="register()">Create Account</button>
+<button onclick="showScreen('login')">Back to Login</button>
+</div>
+</div>
+
+<!-- HOME -->
+<div id="home" class="screen">
+<div class="card">
+<h3>Welcome <span id="username"></span></h3>
 <p>Level: <span id="level">1</span></p>
 <p>Coins: <span id="coins">0</span></p>
-<p>High Score: <span id="highScore">0</span></p>
-<button onclick="startGame()">Start Level</button>
-<button onclick="dailyChallenge()">Daily Challenge</button>
+<button onclick="showScreen('levels')">Play Levels</button>
+<button onclick="logout()">Logout</button>
 </div>
 </div>
 
+<!-- LEVELS -->
+<div id="levels" class="screen">
+<div class="card">
+<h3>Select Level</h3>
+<div id="levelList"></div>
+</div>
+</div>
+
+<!-- GAME -->
 <div id="game" class="screen">
 <div class="card">
 <h3 id="question"></h3>
-<input type="number" id="answer" placeholder="Enter Answer">
+<input type="number" id="answer" placeholder="Answer">
 <br>
 <button onclick="submitAnswer()">Submit</button>
-<p id="timer"></p>
-<div class="stats">
-Score: <span id="score">0</span> |
-XP: <span id="xp">0</span>
+<p>Score: <span id="score">0</span></p>
 </div>
 </div>
-<button onclick="goHome()">Exit</button>
+
+<!-- PROFILE -->
+<div id="profile" class="screen">
+<div class="card">
+<h3>Profile</h3>
+<p>Name: <span id="profileName"></span></p>
+<p>Level: <span id="profileLevel"></span></p>
+<p>Coins: <span id="profileCoins"></span></p>
 </div>
+</div>
+
+<!-- PRIVACY -->
+<div id="privacy" class="screen">
+<div class="card">
+<h3>Privacy Policy</h3>
+<p>We store basic user data locally in your browser. No personal data is shared.</p>
+</div>
+</div>
+
+<!-- TERMS -->
+<div id="terms" class="screen">
+<div class="card">
+<h3>Terms & Conditions</h3>
+<p>By using this app, you agree to follow fair gameplay rules.</p>
+</div>
+</div>
+
+<nav>
+<button onclick="showScreen('home')">Home</button>
+<button onclick="showScreen('levels')">Levels</button>
+<button onclick="showScreen('profile')">Profile</button>
+<button onclick="showScreen('privacy')">Privacy</button>
+<button onclick="showScreen('terms')">Terms</button>
+</nav>
 
 <script>
-let level=parseInt(localStorage.getItem("level"))||1;
-let coins=parseInt(localStorage.getItem("coins"))||0;
-let highScore=parseInt(localStorage.getItem("highScore"))||0;
-let score=0;
-let xp=0;
+let currentUser=null;
 let correctAnswer;
-let timerInterval;
-let timeLeft;
-
-document.getElementById("level").innerText=level;
-document.getElementById("coins").innerText=coins;
-document.getElementById("highScore").innerText=highScore;
+let score=0;
 
 function showScreen(id){
 document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
 document.getElementById(id).classList.add('active');
 }
 
-function goHome(){
-clearInterval(timerInterval);
-showScreen('home');
+function register(){
+let user=document.getElementById("regUser").value;
+let pass=document.getElementById("regPass").value;
+
+if(user && pass){
+localStorage.setItem("user_"+user,JSON.stringify({
+password:pass,
+level:1,
+coins:0
+}));
+alert("Account Created");
+showScreen("login");
+}
 }
 
-function startGame(){
+function login(){
+let user=document.getElementById("loginUser").value;
+let pass=document.getElementById("loginPass").value;
+let data=localStorage.getItem("user_"+user);
+
+if(data){
+let userData=JSON.parse(data);
+if(userData.password===pass){
+currentUser=user;
+loadUserData();
+showScreen("home");
+}else{
+alert("Wrong Password");
+}
+}else{
+alert("User Not Found");
+}
+}
+
+function logout(){
+currentUser=null;
+showScreen("login");
+}
+
+function loadUserData(){
+let data=JSON.parse(localStorage.getItem("user_"+currentUser));
+document.getElementById("username").innerText=currentUser;
+document.getElementById("profileName").innerText=currentUser;
+document.getElementById("profileLevel").innerText=data.level;
+document.getElementById("profileCoins").innerText=data.coins;
+document.getElementById("level").innerText=data.level;
+document.getElementById("coins").innerText=data.coins;
+generateLevelButtons(data.level);
+}
+
+function generateLevelButtons(maxLevel){
+let levelDiv=document.getElementById("levelList");
+levelDiv.innerHTML="";
+for(let i=1;i<=maxLevel;i++){
+levelDiv.innerHTML+=`<button onclick="startGame(${i})">Level ${i}</button>`;
+}
+}
+
+function startGame(level){
 score=0;
-xp=0;
-document.getElementById("score").innerText=score;
-document.getElementById("xp").innerText=xp;
-showScreen('game');
-generateQuestion();
+generateQuestion(level);
+showScreen("game");
 }
 
-function generateQuestion(){
-let difficulty=Math.min(level,3000);
-
-let num1=Math.floor(Math.random()*difficulty)+1;
-let num2=Math.floor(Math.random()*difficulty)+1;
-
-let ops=["+","-","*","/"];
-let op=ops[Math.floor(Math.random()*ops.length)];
-
-if(op==="+")correctAnswer=num1+num2;
-if(op==="-")correctAnswer=num1-num2;
-if(op==="*")correctAnswer=num1*num2;
-if(op==="/"){correctAnswer=num1; num2=1;}
-
+function generateQuestion(level){
+let num1=Math.floor(Math.random()*level*10)+1;
+let num2=Math.floor(Math.random()*level*10)+1;
+correctAnswer=num1+num2;
 document.getElementById("question").innerText=
-"Level "+level+": "+num1+" "+op+" "+num2+" = ?";
-
-startTimer(Math.max(5,20-level/200));
-}
-
-function startTimer(seconds){
-timeLeft=Math.floor(seconds);
-document.getElementById("timer").innerText="Time: "+timeLeft;
-clearInterval(timerInterval);
-timerInterval=setInterval(()=>{
-timeLeft--;
-document.getElementById("timer").innerText="Time: "+timeLeft;
-if(timeLeft<=0){
-clearInterval(timerInterval);
-alert("Time Up!");
-generateQuestion();
-}
-},1000);
+"Level "+level+": "+num1+" + "+num2+" = ?";
 }
 
 function submitAnswer(){
-let userAnswer=parseFloat(document.getElementById("answer").value);
-if(userAnswer===correctAnswer){
+let ans=parseInt(document.getElementById("answer").value);
+if(ans===correctAnswer){
 score++;
-xp+=10;
-coins+=5;
-level++;
-document.getElementById("score").innerText=score;
-document.getElementById("xp").innerText=xp;
-document.getElementById("coins").innerText=coins;
-document.getElementById("level").innerText=level;
-localStorage.setItem("level",level);
-localStorage.setItem("coins",coins);
+let data=JSON.parse(localStorage.getItem("user_"+currentUser));
+data.level++;
+data.coins+=5;
+localStorage.setItem("user_"+currentUser,JSON.stringify(data));
+alert("Correct! Level Up!");
+loadUserData();
+showScreen("home");
+}else{
+alert("Wrong Answer");
 }
 document.getElementById("answer").value="";
-if(score>highScore){
-highScore=score;
-localStorage.setItem("highScore",highScore);
-document.getElementById("highScore").innerText=highScore;
-}
-generateQuestion();
-}
-
-function dailyChallenge(){
-alert("Daily Challenge: Solve 20 questions without mistake!");
 }
 </script>
 
