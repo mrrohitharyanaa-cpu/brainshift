@@ -3,181 +3,184 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BrainShift Pro</title>
+<title>Math Empire 2026</title>
 
 <style>
 body{
 margin:0;
 font-family:Arial, sans-serif;
-background:#0f2027;
+background:linear-gradient(135deg,#0f2027,#203a43,#2c5364);
 color:white;
-overflow:hidden;
+text-align:center;
 }
 
 header{
-background:#141e30;
 padding:15px;
-text-align:center;
 font-size:22px;
 font-weight:bold;
+background:#111;
 }
 
-.screen{
-display:none;
-padding:15px;
-height:calc(100vh - 120px);
-overflow:auto;
-}
-
-.active{
-display:block;
-}
+.screen{display:none;padding:20px;}
+.active{display:block;}
 
 .card{
-background:#1f2f40;
-padding:15px;
+background:rgba(255,255,255,0.08);
+padding:20px;
 border-radius:15px;
-margin-bottom:15px;
-box-shadow:0 5px 15px rgba(0,0,0,0.4);
+margin:15px auto;
+max-width:420px;
+box-shadow:0 10px 20px rgba(0,0,0,0.5);
 }
 
 button{
-padding:10px 20px;
+padding:12px 25px;
 border:none;
-border-radius:20px;
+border-radius:25px;
+margin:5px;
+font-weight:bold;
 background:#00ffcc;
 color:black;
-font-weight:bold;
 }
 
-nav{
-position:fixed;
-bottom:0;
-width:100%;
-display:flex;
-background:#141e30;
-}
-
-nav button{
-flex:1;
-padding:15px;
-background:none;
-color:white;
+input{
+padding:10px;
+border-radius:10px;
 border:none;
-font-size:16px;
+width:80%;
+font-size:18px;
+text-align:center;
 }
 
-canvas{
-background:#111;
-border-radius:15px;
-margin-top:10px;
-}
-
+#timer{font-size:18px;margin-top:10px;}
+.stats{margin-top:10px;font-size:14px;}
 </style>
 </head>
 <body>
 
-<header>BrainShift Pro</header>
+<header>Math Empire 2026</header>
 
 <div id="home" class="screen active">
 <div class="card">
-<h3>Welcome Player 👋</h3>
-<p>Play game and increase your brain speed.</p>
-<button onclick="showScreen('game')">Play Game</button>
-</div>
-
-<div class="card">
-<h3>Statistics</h3>
-<p>Total High Score: <span id="highScore">0</span></p>
+<h2>Welcome Challenger</h2>
+<p>Level: <span id="level">1</span></p>
+<p>Coins: <span id="coins">0</span></p>
+<p>High Score: <span id="highScore">0</span></p>
+<button onclick="startGame()">Start Level</button>
+<button onclick="dailyChallenge()">Daily Challenge</button>
 </div>
 </div>
 
 <div id="game" class="screen">
-<h3>Game Zone 🎮</h3>
-<canvas id="gameCanvas"></canvas>
-<p>Score: <span id="score">0</span></p>
-<button onclick="goHome()">Exit Game</button>
-</div>
-
-<div id="profile" class="screen">
 <div class="card">
-<h3>Profile</h3>
-<p>Name: Player</p>
-<p>Status: Pro Gamer</p>
+<h3 id="question"></h3>
+<input type="number" id="answer" placeholder="Enter Answer">
+<br>
+<button onclick="submitAnswer()">Submit</button>
+<p id="timer"></p>
+<div class="stats">
+Score: <span id="score">0</span> |
+XP: <span id="xp">0</span>
 </div>
 </div>
-
-<nav>
-<button onclick="showScreen('home')">Home</button>
-<button onclick="showScreen('game')">Game</button>
-<button onclick="showScreen('profile')">Profile</button>
-</nav>
+<button onclick="goHome()">Exit</button>
+</div>
 
 <script>
+let level=parseInt(localStorage.getItem("level"))||1;
+let coins=parseInt(localStorage.getItem("coins"))||0;
+let highScore=parseInt(localStorage.getItem("highScore"))||0;
+let score=0;
+let xp=0;
+let correctAnswer;
+let timerInterval;
+let timeLeft;
+
+document.getElementById("level").innerText=level;
+document.getElementById("coins").innerText=coins;
+document.getElementById("highScore").innerText=highScore;
+
 function showScreen(id){
 document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
 document.getElementById(id).classList.add('active');
 }
 
 function goHome(){
+clearInterval(timerInterval);
 showScreen('home');
 }
 
-const canvas=document.getElementById("gameCanvas");
-const ctx=canvas.getContext("2d");
-
-canvas.width=window.innerWidth-30;
-canvas.height=400;
-
-let player={x:canvas.width/2-20,y:350,size:40};
-let obstacle={x:Math.random()*300,y:-40,size:40,speed:4};
-let score=0;
-let highScore=localStorage.getItem("highScore")||0;
-document.getElementById("highScore").innerText=highScore;
-
-function draw(){
-ctx.clearRect(0,0,canvas.width,canvas.height);
-ctx.fillStyle="#00ffcc";
-ctx.fillRect(player.x,player.y,player.size,player.size);
-
-ctx.fillStyle="#ff4d4d";
-ctx.fillRect(obstacle.x,obstacle.y,obstacle.size,obstacle.size);
-
-obstacle.y+=obstacle.speed;
-
-if(obstacle.y>400){
-obstacle.y=-40;
-obstacle.x=Math.random()*300;
-score++;
+function startGame(){
+score=0;
+xp=0;
 document.getElementById("score").innerText=score;
+document.getElementById("xp").innerText=xp;
+showScreen('game');
+generateQuestion();
 }
 
-if(player.x<obstacle.x+40 &&
-player.x+40>obstacle.x &&
-player.y<obstacle.y+40 &&
-player.y+40>obstacle.y){
-alert("Game Over");
+function generateQuestion(){
+let difficulty=Math.min(level,3000);
+
+let num1=Math.floor(Math.random()*difficulty)+1;
+let num2=Math.floor(Math.random()*difficulty)+1;
+
+let ops=["+","-","*","/"];
+let op=ops[Math.floor(Math.random()*ops.length)];
+
+if(op==="+")correctAnswer=num1+num2;
+if(op==="-")correctAnswer=num1-num2;
+if(op==="*")correctAnswer=num1*num2;
+if(op==="/"){correctAnswer=num1; num2=1;}
+
+document.getElementById("question").innerText=
+"Level "+level+": "+num1+" "+op+" "+num2+" = ?";
+
+startTimer(Math.max(5,20-level/200));
+}
+
+function startTimer(seconds){
+timeLeft=Math.floor(seconds);
+document.getElementById("timer").innerText="Time: "+timeLeft;
+clearInterval(timerInterval);
+timerInterval=setInterval(()=>{
+timeLeft--;
+document.getElementById("timer").innerText="Time: "+timeLeft;
+if(timeLeft<=0){
+clearInterval(timerInterval);
+alert("Time Up!");
+generateQuestion();
+}
+},1000);
+}
+
+function submitAnswer(){
+let userAnswer=parseFloat(document.getElementById("answer").value);
+if(userAnswer===correctAnswer){
+score++;
+xp+=10;
+coins+=5;
+level++;
+document.getElementById("score").innerText=score;
+document.getElementById("xp").innerText=xp;
+document.getElementById("coins").innerText=coins;
+document.getElementById("level").innerText=level;
+localStorage.setItem("level",level);
+localStorage.setItem("coins",coins);
+}
+document.getElementById("answer").value="";
 if(score>highScore){
 highScore=score;
 localStorage.setItem("highScore",highScore);
 document.getElementById("highScore").innerText=highScore;
 }
-score=0;
-document.getElementById("score").innerText=0;
-obstacle.y=-40;
+generateQuestion();
 }
 
-requestAnimationFrame(draw);
+function dailyChallenge(){
+alert("Daily Challenge: Solve 20 questions without mistake!");
 }
-
-canvas.addEventListener("touchmove",function(e){
-let touchX=e.touches[0].clientX;
-player.x=touchX-player.size/2;
-});
-
-draw();
 </script>
 
 </body>
-  </html>
-  
+</html>
